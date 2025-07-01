@@ -1,0 +1,148 @@
+{
+  "name": "fivemgen",
+  "displayName": "FiveM Resource Generator",
+  "description": "Comprehensive resource generator for FiveM with multi-language support",
+  "version": "1.3.0",
+  "icon": "logo/fivem.png",
+  "engines": {
+    "vscode": "^1.101.0"
+  },
+  "publisher": "NoCapScripts",
+  "author": {
+    "name": "Zegzus",
+    "email": "your-email@example.com",
+    "url": "https://github.com/nocapscsripts"
+  },
+  "license": "GNU General Public License v3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nocapscsripts/fivem-builder"
+  },
+  "bugs": {
+    "url": "https://github.com/nocapscsripts/fivem-builder/issues"
+  },
+  "homepage": "https://github.com/nocapscsripts/fivem-builder#readme",
+  "categories": [
+    "Snippets",
+    "Extension Packs",
+    "Other"
+  ],
+  "keywords": [
+    "fivem",
+    "resource",
+    "generator",
+    "gtav",
+    "lua",
+    "javascript",
+    "typescript",
+    "csharp"
+  ],
+  "activationEvents": [
+  
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "fivembuilder.createResource",
+        "title": "Generate FiveM Resource",
+        "category": "FiveM"
+      }
+    ],
+    "languages": [
+      {
+        "id": "lua",
+        "extensions": [".lua"],
+        "aliases": ["Lua", "FiveM Lua"],
+        "configuration": "./language-configurations/lua.json"
+      },
+      {
+        "id": "javascript",
+        "extensions": [".js"],
+        "aliases": ["JavaScript", "JS"],
+        "configuration": "./language-configurations/javascript.json"
+      },
+      {
+        "id": "typescript",
+        "extensions": [".ts"],
+        "aliases": ["TypeScript", "TS"],
+        "configuration": "./language-configurations/typescript.json"
+      },
+      {
+        "id": "csharp",
+        "extensions": [".cs"],
+        "aliases": ["C#", "CS"],
+        "configuration": "./language-configurations/csharp.json"
+      },
+      {
+        "id": "json",
+        "extensions": [".json"],
+        "aliases": ["JSON"],
+        "configuration": "./language-configurations/json.json"
+      },
+      {
+        "id": "html",
+        "extensions": [".html"],
+        "aliases": ["HTML"],
+        "configuration": "./language-configurations/html.json"
+      },
+      {
+        "id": "css",
+        "extensions": [".css"],
+        "aliases": ["CSS"],
+        "configuration": "./language-configurations/css.json"
+      },
+      {
+        "id": "yaml",
+        "extensions": [".yaml", ".yml"],
+        "aliases": ["YAML"],
+        "configuration": "./language-configurations/yaml.json"
+      },
+      {
+        "id": "sql",
+        "extensions": [".sql"],
+        "aliases": ["SQL"],
+        "configuration": "./language-configurations/sql.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "lua",
+        "path": "./snippets/lua.json"
+      },
+      {
+        "language": "javascript",
+        "path": "./snippets/javascript.json"
+      },
+      {
+        "language": "typescript",
+        "path": "./snippets/typescript.json"
+      },
+      {
+        "language": "csharp",
+        "path": "./snippets/csharp.json"
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "yarn run lint",
+    "test": "vscode-test",
+    "watch": "tsc -watch -p ./",
+    "compile": "tsc -p ./",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.101.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.25.1",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {
+    "glob": "^8.1.0"
+  }
+}
