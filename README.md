@@ -46,17 +46,9 @@ FiveMGen contributes the following settings:
 
 ## 📦 Release Notes
 
-### 1.1.0
-- Added JavaScript fxmanifest templates
-- Snippets for client/server events
-- Minor UI and command palette improvements
+### 1.3.1
+- Added 1 more new snippet called genf. Go and explore!
 
-### 1.0.1
-- Fixed Lua snippet formatting issue
-- Improved manifest generation logic
-
-### 1.0.0
-- Initial release with Lua snippets and manifest generator
 
 ---
 
