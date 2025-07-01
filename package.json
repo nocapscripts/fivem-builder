@@ -1,6 +1,6 @@
 {
   "name": "fivemgen",
-  "displayName": "FiveM Resource Generator",
+  "displayName": "FiveM Basic Resource Generator",
   "description": "Comprehensive resource generator for FiveM with multi-language support",
   "version": "1.3.0",
   "icon": "logo/fivem.png",
