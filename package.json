@@ -2,7 +2,7 @@
   "name": "fivemgen",
   "displayName": "FiveM Basic Resource Generator",
   "description": "Comprehensive resource generator for FiveM with multi-language support",
-  "version": "1.3.1",
+  "version": "1.3.3",
   "icon": "logo/fivem.png",
   "engines": {
     "vscode": "^1.101.0"
@@ -109,6 +109,12 @@
         "extensions": [".sql"],
         "aliases": ["SQL"],
         "configuration": "./language-configurations/sql.json"
+      },
+      {
+        "id": "vue",
+        "extensions": [".vue"],
+        "aliases": ["VUE"],
+        "configuration": "./language-configurations/vue.json"
       }
     ],
     "snippets": [
@@ -127,6 +133,10 @@
       {
         "language": "csharp",
         "path": "./snippets/csharp.json"
+      },
+      {
+        "language": ".vue",
+        "path": "./snippets/vue.json"
       }
     ]
   },

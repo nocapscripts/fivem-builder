@@ -46,8 +46,8 @@ FiveMGen contributes the following settings:
 
 ## 📦 Release Notes
 
-### 1.3.1
-- Added 1 more new snippet called genf. Go and explore!
+### 1.3.3
+- Added 1 more new snippet called genr and more languages support. Go and explore!
 
 
 ---
@@ -90,6 +90,6 @@ code .
 
 * genfm -> Generates just fxmanifest file 
 
-* genf -> Starts the same process at first step
+* genr -> Starts the same process at first step
 
 

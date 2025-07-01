@@ -58,14 +58,14 @@ class FiveMBuilder {
     }
 
     registerCompletionProvider() {
-        const languages = ['lua', 'javascript', 'typescript', 'json', 'plaintext'];
+        const languages = ['lua', 'javascript', 'vue', 'typescript', 'json', 'plaintext'];
 
         const provider = vscode.languages.registerCompletionItemProvider(
             languages.map(lang => ({ scheme: 'file', language: lang })),
             {
                 provideCompletionItems: (doc, pos) => this.generateCompletionItems()
             },
-            'g' // trigger on "g", so "gen" and "genfm" can suggest
+            'g'  
         );
 
         this.disposables.push(provider);
@@ -202,7 +202,7 @@ class FiveMBuilder {
 
         const genItem = new vscode.CompletionItem('genr', vscode.CompletionItemKind.Keyword);
         genItem.detail = 'Generate full FiveM resource';
-        genItem.insertText = ''; // Trigger command manually
+        genItem.insertText = ''; 
         genItem.command = {
             title: 'Run Generator',
             command: 'fivembuilder.generateResourceViaSnippet'
