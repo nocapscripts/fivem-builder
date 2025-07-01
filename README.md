@@ -46,6 +46,10 @@ FiveMGen contributes the following settings:
 
 ## 📦 Release Notes
 
+### 1.3.4
+- Added added Alpine project template generator feature
+
+
 ### 1.3.3
 - Added 1 more new snippet called genr and more languages support. Go and explore!
 

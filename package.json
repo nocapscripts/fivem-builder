@@ -2,7 +2,7 @@
   "name": "fivemgen",
   "displayName": "FiveM Basic Resource Generator",
   "description": "Comprehensive resource generator for FiveM with multi-language support",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "icon": "logo/fivem.png",
   "engines": {
     "vscode": "^1.101.0"
@@ -24,11 +24,14 @@
   "homepage": "https://github.com/nocapscsripts/fivem-builder#readme",
   "categories": [
     "Snippets",
+    "Formatters",
     "Extension Packs",
     "Other"
   ],
   "keywords": [
     "fivem",
+    "cfxre",
+    "cfx",
     "resource",
     "generator",
     "gtav",
@@ -38,12 +41,8 @@
     "csharp"
   ],
   "activationEvents": [
-    "onCommand:fivembuilder.createResource",
-    "onCommand:fivembuilder.generateResourceViaSnippet",
-    "onLanguage:lua",
-    "onLanguage:javascript",
-    "onLanguage:typescript",
-    "onLanguage:json",
+    
+  
     "onLanguage:plaintext"
   ],
   "main": "./extension.js",
@@ -58,64 +57,111 @@
     "languages": [
       {
         "id": "lua",
-        "extensions": [".lua"],
-        "aliases": ["Lua", "FiveM Lua"],
+        "extensions": [
+          ".lua"
+        ],
+        "aliases": [
+          "Lua",
+          "FiveM Lua"
+        ],
         "configuration": "./language-configurations/lua.json"
       },
       {
         "id": "javascript",
-        "extensions": [".js"],
-        "aliases": ["JavaScript", "JS"],
+        "extensions": [
+          ".js"
+        ],
+        "aliases": [
+          "JavaScript",
+          "JS"
+        ],
         "configuration": "./language-configurations/javascript.json"
       },
       {
         "id": "typescript",
-        "extensions": [".ts"],
-        "aliases": ["TypeScript", "TS"],
+        "extensions": [
+          ".ts"
+        ],
+        "aliases": [
+          "TypeScript",
+          "TS"
+        ],
+        "configuration": "./language-configurations/typescript.json"
+      },
+      {
+        "id": "typescript",
+        "extensions": [
+          ".tsx"
+        ],
+        "aliases": [
+          "TypeScript",
+          "TSX"
+        ],
         "configuration": "./language-configurations/typescript.json"
       },
       {
         "id": "csharp",
-        "extensions": [".cs"],
-        "aliases": ["C#", "CS"],
+        "extensions": [
+          ".cs"
+        ],
+        "aliases": [
+          "C#",
+          "CS"
+        ],
         "configuration": "./language-configurations/csharp.json"
       },
       {
         "id": "json",
-        "extensions": [".json"],
-        "aliases": ["JSON"],
+        "extensions": [
+          ".json"
+        ],
+        "aliases": [
+          "JSON"
+        ],
         "configuration": "./language-configurations/json.json"
       },
       {
         "id": "html",
-        "extensions": [".html"],
-        "aliases": ["HTML"],
+        "extensions": [
+          ".html"
+        ],
+        "aliases": [
+          "HTML"
+        ],
         "configuration": "./language-configurations/html.json"
       },
       {
         "id": "css",
-        "extensions": [".css"],
-        "aliases": ["CSS"],
+        "extensions": [
+          ".css"
+        ],
+        "aliases": [
+          "CSS"
+        ],
         "configuration": "./language-configurations/css.json"
       },
       {
         "id": "yaml",
-        "extensions": [".yaml", ".yml"],
-        "aliases": ["YAML"],
+        "extensions": [
+          ".yaml",
+          ".yml"
+        ],
+        "aliases": [
+          "YAML"
+        ],
         "configuration": "./language-configurations/yaml.json"
       },
       {
         "id": "sql",
-        "extensions": [".sql"],
-        "aliases": ["SQL"],
+        "extensions": [
+          ".sql"
+        ],
+        "aliases": [
+          "SQL"
+        ],
         "configuration": "./language-configurations/sql.json"
-      },
-      {
-        "id": "vue",
-        "extensions": [".vue"],
-        "aliases": ["VUE"],
-        "configuration": "./language-configurations/vue.json"
       }
+    
     ],
     "snippets": [
       {
@@ -133,11 +179,8 @@
       {
         "language": "csharp",
         "path": "./snippets/csharp.json"
-      },
-      {
-        "language": ".vue",
-        "path": "./snippets/vue.json"
       }
+    
     ]
   },
   "scripts": {
@@ -159,6 +202,7 @@
     "vsce": "^2.15.0"
   },
   "dependencies": {
-    "glob": "^8.1.0"
+    "glob": "^8.1.0",
+    "simple-git": "^3.28.0"
   }
 }

@@ -2,9 +2,11 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const { promisify } = require('util');
+const simpleGit = require('simple-git')
 
 const mkdir = promisify(fs.mkdir);
 const writeFile = promisify(fs.writeFile);
+
 
 class FiveMBuilder {
     constructor(context) {
@@ -13,7 +15,7 @@ class FiveMBuilder {
         this.bindedCreateResourceFlow = this.createResourceFlow.bind(this);
     }
 
-    activate() {
+    async activate() {
         console.log('FiveM Builder is now active!');
 
         try {
@@ -27,12 +29,83 @@ class FiveMBuilder {
         }
     }
 
-    deactivate() {
+    async deactivate() {
         this.disposables.forEach(d => d.dispose());
         this.disposables = [];
     }
 
-    registerCommands() {
+
+    async promptForAlpineFolder() {
+        try {
+            const folderUri = await vscode.window.showOpenDialog({
+                canSelectFolders: true,
+                openLabel: 'Select folder to create the Alpine template in'
+            });
+
+            if (!folderUri?.length) {
+                this.showWarningMessage('No folder selected');
+                return null;
+            }
+
+            return folderUri[0];
+        } catch (error) {
+            this.showErrorMessage('Folder selection failed', error);
+            return null;
+        }
+    }
+
+
+    async generateAlpineFlow() {
+        const name = await this.promptForResourceName();
+        if (!name) return;
+
+        const author = await this.askForAuthor();
+        if (!author) return;
+
+        await this.CreateAlpineTemplate({ name, author });
+    }
+
+    async CreateAlpineTemplate({ name, author }) {
+        const folderUri = await this.promptForAlpineFolder();
+        if (!folderUri) return;
+
+        const projectPath = path.join(folderUri.fsPath, name);
+
+        try {
+            vscode.window.showInformationMessage(`Cloning Alpine boilerplate to ${projectPath}...`);
+
+            const git = simpleGit();
+
+            // Clone into new folder named after the project
+            await git.clone('https://github.com/NoCapScripts-FiveM/fivem-alpine-boilerplate.git', projectPath);
+
+            vscode.window.showInformationMessage(`Template cloned successfully!`);
+
+            // Modify README.md if exists
+            const readmePath = path.join(projectPath, 'README.md');
+            if (fs.existsSync(readmePath)) {
+                let content = await fs.promises.readFile(readmePath, 'utf8');
+                content = content.replace(/{{NAME}}/g, name).replace(/{{AUTHOR}}/g, author);
+                await fs.promises.writeFile(readmePath, content);
+            }
+
+            vscode.window.showInformationMessage(`Project "${name}" created successfully.`);
+
+            const open = await vscode.window.showInformationMessage(
+                'Open the new project folder?', 'Open Folder'
+            );
+
+            if (open === 'Open Folder') {
+                vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(projectPath), true);
+            }
+
+        } catch (error) {
+            this.showErrorMessage(`Failed to create Alpine project`, error);
+        }
+    }
+    
+
+    async registerCommands() {
         const commands = [
             {
                 command: 'fivembuilder.createResource',
@@ -41,6 +114,10 @@ class FiveMBuilder {
             {
                 command: 'fivembuilder.generateResourceViaSnippet',
                 callback: () => this.safeExecute(this.createResourceFlow)
+            },
+            {
+                command: 'fivembuilder.generateAlpine',
+                callback: () => this.safeExecute(this.generateAlpineFlow)
             }
         ];
 
@@ -50,15 +127,15 @@ class FiveMBuilder {
         }
     }
 
-    setupTextDocumentWatcher() {
+    async setupTextDocumentWatcher() {
         const watcher = vscode.workspace.onDidChangeTextDocument(event => {
             this.safeExecute(() => this.handleTextDocumentChange(event));
         });
         this.disposables.push(watcher);
     }
 
-    registerCompletionProvider() {
-        const languages = ['lua', 'javascript', 'vue', 'typescript', 'json', 'plaintext'];
+    async registerCompletionProvider() {
+        const languages = ['lua', 'javascript', 'typescript', 'json', 'plaintext'];
 
         const provider = vscode.languages.registerCompletionItemProvider(
             languages.map(lang => ({ scheme: 'file', language: lang })),
@@ -71,11 +148,24 @@ class FiveMBuilder {
         this.disposables.push(provider);
     }
 
-    async safeExecute(fn) {
+   async safeExecute(fn) {
         try {
             await fn.call(this);
         } catch (error) {
             this.showErrorMessage('Operation failed', error);
+        }
+    }
+
+    async promptForResourceName() {
+        try {
+            return await vscode.window.showInputBox({
+                prompt: 'Enter the name of the FiveM resource',
+                placeHolder: 'my-resource',
+                validateInput: this.validateResourceName
+            });
+        } catch (error) {
+            this.showErrorMessage('Failed to get resource name', error);
+            return null;
         }
     }
 
@@ -92,26 +182,17 @@ class FiveMBuilder {
         await this.createResourceStructure(folderUri.fsPath, resourceName, authorName);
     }
 
-    async promptForResourceName() {
-        try {
-            return await vscode.window.showInputBox({
-                prompt: 'Enter the name of the FiveM resource',
-                placeHolder: 'my-resource',
-                validateInput: this.validateResourceName
-            });
-        } catch (error) {
-            this.showErrorMessage('Failed to get resource name', error);
-            return null;
-        }
-    }
 
-    validateResourceName(value) {
+
+  
+
+    async validateResourceName(value) {
         if (!value || !value.trim()) return 'Resource name cannot be empty';
         if (/[<>:"/\\|?*\x00-\x1F]/.test(value)) return 'Invalid characters in name';
         return null;
     }
 
-    async promptForFolderSelection() {
+     async  promptForFolderSelection() {
         try {
             const folderUri = await vscode.window.showOpenDialog({
                 canSelectFolders: true,
@@ -150,7 +231,7 @@ class FiveMBuilder {
         }
     }
 
-    validateAuthorName(value) {
+    async validateAuthorName(value) {
         return (!value || !value.trim()) ? 'Author name cannot be empty' : null;
     }
 
@@ -180,21 +261,30 @@ class FiveMBuilder {
         const editor = vscode.window.activeTextEditor;
         if (!editor || event.document !== editor.document) return;
 
-        for (const change of event.contentChanges) {
-            if (change.text.includes('genfm')) {
-                const index = change.text.indexOf('genfm');
-                const startPos = change.range.start.translate(0, index);
-                const endPos = startPos.translate(0, 'genfm'.length);
-                const range = new vscode.Range(startPos, endPos);
+        const triggers = [
+            { trigger: 'genfm', action: () => this.createResourceFlow() },
+            { trigger: 'genf', action: () => this.createResourceFlow() },
+            { trigger: 'genalp', action: () => generateAlpineFlow() },
+        ];
 
-                await editor.edit(edit => edit.delete(range));
-                await this.createResourceFlow();
-                break;
+        for (const change of event.contentChanges) {
+            for (const { trigger, action } of triggers) {
+                if (change.text.includes(trigger)) {
+                    const index = change.text.indexOf(trigger);
+                    const startPos = change.range.start.translate(0, index);
+                    const endPos = startPos.translate(0, trigger.length);
+                    const range = new vscode.Range(startPos, endPos);
+
+                    await editor.edit(edit => edit.delete(range));
+                    await this.safeExecute(action);
+                    return;
+                }
             }
         }
     }
 
-    generateCompletionItems() {
+
+    async generateCompletionItems() {
         const fxItem = new vscode.CompletionItem('genfm', vscode.CompletionItemKind.Snippet);
         fxItem.detail = 'Insert basic fxmanifest.lua';
         fxItem.insertText = new vscode.SnippetString(this.fxManifestSnippet());
@@ -209,52 +299,63 @@ class FiveMBuilder {
         };
         genItem.documentation = new vscode.MarkdownString('Runs the resource generator (like Create Resource command).');
 
-        return [fxItem, genItem];
+        const genAlpine = new vscode.CompletionItem('genalp', vscode.CompletionItemKind.Keyword);
+        genAlpine.detail = 'Generate Alpine template';
+        genAlpine.insertText = ''; 
+        genAlpine.command = {
+            title: 'Generate now',
+            command: 'fivembuilder.generateAlpine'
+        }
+        genAlpine.documentation = new vscode.MarkdownString('Generates Alpine template for html')
+
+
+        return [fxItem, genItem, genAlpine];
     }
 
     fxManifestTemplate(name, author) {
-        return `fx_version 'cerulean'
-game 'gta5'
+        return `fx_version ('cerulean')
+game ('gta5')
 
-lua54 'yes'
+lua54 ('yes')
 
-author '${author}'
-description '${name} resource'
-version '1.0.0'
+author ('\${1:author}')
+description ('\${2:description}')
+version ('\${3:1.0.0}')
 
-client_scripts {
+client_scripts ({
     'client/*.lua'
-}
+})
 
-server_scripts {
+server_scripts ({
     'server/*.lua'
-}
+})
 
 -- Script generated by VSCode FiveM Builder
 `;
-    }
+}
 
     fxManifestSnippet() {
-        return `fx_version 'cerulean'
-game 'gta5'
+        return `fx_version ('cerulean')
+game ('gta5')
 
-lua54 'yes'
+lua54 ('yes')
 
-author '\${1:author}'
-description '\${2:description}'
-version '\${3:1.0.0}'
+author ('\${1:author}')
+description ('\${2:description}')
+version ('\${3:1.0.0}')
 
-client_scripts {
+client_scripts ({
     'client/*.lua'
-}
+})
 
-server_scripts {
+server_scripts ({
     'server/*.lua'
-}
+})
 
 -- Script generated by VSCode FiveM Builder
 `;
-    }
+
+}
 
     showErrorMessage(message, error) {
         const fullMessage = error?.message ? `${message}: ${error.message}` : message;
