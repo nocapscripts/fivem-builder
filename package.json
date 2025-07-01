@@ -38,7 +38,13 @@
     "csharp"
   ],
   "activationEvents": [
-  
+    "onCommand:fivembuilder.createResource",
+    "onCommand:fivembuilder.generateResourceViaSnippet",
+    "onLanguage:lua",
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:json",
+    "onLanguage:plaintext"
   ],
   "main": "./extension.js",
   "contributes": {

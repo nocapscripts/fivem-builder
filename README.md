@@ -88,3 +88,16 @@ To build and test the extension locally:
 npm install
 npm run compile
 code .
+```
+
+
+## Usage HOW TO
+
+
+* Ctrl + Shift + P -> Generate Fivem Resource 
+
+* genfm -> Generates just fxmanifest file 
+
+* genf -> Starts the same process at first step
+
+

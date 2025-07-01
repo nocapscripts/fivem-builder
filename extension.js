@@ -3,7 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const { promisify } = require('util');
 
-// Promisify file system operations
 const mkdir = promisify(fs.mkdir);
 const writeFile = promisify(fs.writeFile);
 
@@ -11,11 +10,12 @@ class FiveMBuilder {
     constructor(context) {
         this.context = context;
         this.disposables = [];
+        this.bindedCreateResourceFlow = this.createResourceFlow.bind(this);
     }
 
     activate() {
         console.log('FiveM Builder is now active!');
-        
+
         try {
             this.registerCommands();
             this.setupTextDocumentWatcher();
@@ -28,37 +28,47 @@ class FiveMBuilder {
     }
 
     deactivate() {
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach(d => d.dispose());
         this.disposables = [];
     }
 
     registerCommands() {
-        const createResourceCommand = vscode.commands.registerCommand(
-            'fivembuilder.createResource',
-            () => this.safeExecute(this.createResourceFlow)
-        );
-        this.disposables.push(createResourceCommand);
+        const commands = [
+            {
+                command: 'fivembuilder.createResource',
+                callback: () => this.safeExecute(this.createResourceFlow)
+            },
+            {
+                command: 'fivembuilder.generateResourceViaSnippet',
+                callback: () => this.safeExecute(this.createResourceFlow)
+            }
+        ];
+
+        for (const { command, callback } of commands) {
+            const disposable = vscode.commands.registerCommand(command, callback);
+            this.disposables.push(disposable);
+        }
     }
 
     setupTextDocumentWatcher() {
-        const watcher = vscode.workspace.onDidChangeTextDocument(
-            event => this.safeExecute(() => this.handleTextDocumentChange(event))
-        );
+        const watcher = vscode.workspace.onDidChangeTextDocument(event => {
+            this.safeExecute(() => this.handleTextDocumentChange(event));
+        });
         this.disposables.push(watcher);
     }
 
     registerCompletionProvider() {
-        const supportedLanguages = ['lua', 'javascript', 'typescript', 'plaintext', 'json'];
-        const completionProvider = vscode.languages.registerCompletionItemProvider(
-            supportedLanguages.map(lang => ({ scheme: 'file', language: lang })),
+        const languages = ['lua', 'javascript', 'typescript', 'json', 'plaintext'];
+
+        const provider = vscode.languages.registerCompletionItemProvider(
+            languages.map(lang => ({ scheme: 'file', language: lang })),
             {
-                provideCompletionItems: (document, position) => {
-                    return this.generateCompletionItems(document, position);
-                }
+                provideCompletionItems: (doc, pos) => this.generateCompletionItems()
             },
-            'gen'
+            'g' // trigger on "g", so "gen" and "genfm" can suggest
         );
-        this.disposables.push(completionProvider);
+
+        this.disposables.push(provider);
     }
 
     async safeExecute(fn) {
@@ -97,7 +107,7 @@ class FiveMBuilder {
 
     validateResourceName(value) {
         if (!value || !value.trim()) return 'Resource name cannot be empty';
-        if (value.match(/[<>:"/\\|?*\x00-\x1F]/)) return 'Resource name contains invalid characters';
+        if (/[<>:"/\\|?*\x00-\x1F]/.test(value)) return 'Invalid characters in name';
         return null;
     }
 
@@ -108,7 +118,7 @@ class FiveMBuilder {
                 openLabel: 'Select folder to create the resource in'
             });
 
-            if (!folderUri || folderUri.length === 0) {
+            if (!folderUri?.length) {
                 this.showWarningMessage('No folder selected');
                 return null;
             }
@@ -141,13 +151,12 @@ class FiveMBuilder {
     }
 
     validateAuthorName(value) {
-        if (!value || !value.trim()) return 'Author name cannot be empty';
-        return null;
+        return (!value || !value.trim()) ? 'Author name cannot be empty' : null;
     }
 
     async createResourceStructure(basePath, resourceName, authorName) {
         const resourcePath = path.join(basePath, resourceName);
-        
+
         try {
             await mkdir(resourcePath, { recursive: true });
             await Promise.all([
@@ -161,7 +170,7 @@ class FiveMBuilder {
                 writeFile(path.join(resourcePath, 'server', 'server.lua'), '-- Server script\n')
             ]);
 
-            this.showInformationMessage(`FiveM resource '${resourceName}' created successfully!`);
+            this.showInformationMessage(`Resource '${resourceName}' created successfully.`);
         } catch (error) {
             throw new Error(`Failed to create resource structure: ${error.message}`);
         }
@@ -173,15 +182,12 @@ class FiveMBuilder {
 
         for (const change of event.contentChanges) {
             if (change.text.includes('genfm')) {
-                const genfmIndex = change.text.indexOf('genfm');
-                const startPos = change.range.start.translate(0, genfmIndex);
+                const index = change.text.indexOf('genfm');
+                const startPos = change.range.start.translate(0, index);
                 const endPos = startPos.translate(0, 'genfm'.length);
-                const genfmRange = new vscode.Range(startPos, endPos);
+                const range = new vscode.Range(startPos, endPos);
 
-                await editor.edit(editBuilder => {
-                    editBuilder.delete(genfmRange);
-                });
-
+                await editor.edit(edit => edit.delete(range));
                 await this.createResourceFlow();
                 break;
             }
@@ -189,11 +195,21 @@ class FiveMBuilder {
     }
 
     generateCompletionItems() {
-        const item = new vscode.CompletionItem('genfm', vscode.CompletionItemKind.Snippet);
-        item.detail = 'Insert basic fxmanifest.lua template';
-        item.insertText = new vscode.SnippetString(this.fxManifestSnippet());
-        item.documentation = new vscode.MarkdownString('Generates a basic fxmanifest.lua template.');
-        return [item];
+        const fxItem = new vscode.CompletionItem('genfm', vscode.CompletionItemKind.Snippet);
+        fxItem.detail = 'Insert basic fxmanifest.lua';
+        fxItem.insertText = new vscode.SnippetString(this.fxManifestSnippet());
+        fxItem.documentation = new vscode.MarkdownString('Generates a basic `fxmanifest.lua` template.');
+
+        const genItem = new vscode.CompletionItem('genr', vscode.CompletionItemKind.Keyword);
+        genItem.detail = 'Generate full FiveM resource';
+        genItem.insertText = ''; // Trigger command manually
+        genItem.command = {
+            title: 'Run Generator',
+            command: 'fivembuilder.generateResourceViaSnippet'
+        };
+        genItem.documentation = new vscode.MarkdownString('Runs the resource generator (like Create Resource command).');
+
+        return [fxItem, genItem];
     }
 
     fxManifestTemplate(name, author) {
@@ -241,10 +257,8 @@ server_scripts {
     }
 
     showErrorMessage(message, error) {
-        if (error && typeof error === 'object') {
-            message += `: ${error.message || 'Unknown error'}`;
-        }
-        vscode.window.showErrorMessage(message);
+        const fullMessage = error?.message ? `${message}: ${error.message}` : message;
+        vscode.window.showErrorMessage(fullMessage);
     }
 
     showWarningMessage(message) {
@@ -259,21 +273,14 @@ server_scripts {
 function activate(context) {
     const extension = new FiveMBuilder(context);
     const success = extension.activate();
-    
-    if (!success) {
-        console.error('Failed to activate FiveM Builder extension');
-    }
-    
+    if (!success) console.error('Failed to activate FiveM Builder extension');
     return extension;
 }
 
 function deactivate(extension) {
-    if (extension && typeof extension.deactivate === 'function') {
+    if (extension?.deactivate) {
         extension.deactivate();
     }
 }
 
-module.exports = {
-    activate,
-    deactivate
-};
+module.exports = { activate, deactivate };
