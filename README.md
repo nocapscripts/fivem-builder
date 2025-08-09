@@ -47,7 +47,7 @@ FiveMGen contributes the following settings:
 ## 📦 Release Notes
 
 ### 1.3.4
-- Added added Alpine project template generator feature
+- Added added Alpine project template generator feature.
 
 
 ### 1.3.3

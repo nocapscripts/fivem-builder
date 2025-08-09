@@ -108,6 +108,10 @@ class FiveMBuilder {
     async registerCommands() {
         const commands = [
             {
+                command: 'fivembuilder.createGUIResource',
+                callback: () => this.safeExecute(this.generateAlpineFlow)
+            },
+            {
                 command: 'fivembuilder.createResource',
                 callback: () => this.safeExecute(this.createResourceFlow)
             },
